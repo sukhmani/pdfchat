@@ -12,3 +12,7 @@ PDFChat is a lightweight Streamlit app for extracting and displaying text from u
 ```bash
 pip install -r requirements.txt
 streamlit run app/interface.py
+
+
+PYTHONPATH=. streamlit run app/interface.py
+
