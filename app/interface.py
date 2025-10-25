@@ -1,23 +1,24 @@
 import streamlit as st
-from app.extractor import extract_with_pymupdf, chunk_text
-from app.embedder import find_best_match
+from app.extractor import extract_text_pymupdf
+from app.embedder import embed_text, bert_model, bert_tokenizer
+from app.retriever import retrieve_top_chunks
+from app.generator import generate_answer
 
-st.title("PDFChat")
+st.title("PDFChat with RAG")
 
 uploaded_file = st.file_uploader("Upload a PDF", type="pdf")
-
 if uploaded_file:
-    temp_path = "data/temp.pdf"
-    with open(temp_path, "wb") as f:
+    path = "data/temp.pdf"
+    with open(path, "wb") as f:
         f.write(uploaded_file.read())
 
-    raw_text = extract_with_pymupdf(temp_path)
-    chunks = chunk_text(raw_text)
+    raw_text = extract_text_pymupdf(path)
+    chunks = raw_text.split("\n\n")  # Simple chunking
+    chunk_embeddings = [embed_text(c, bert_model, bert_tokenizer) for c in chunks]
 
-    st.text_area("Extracted Text", raw_text, height=300)
-
-    question = st.text_input("Ask a question about the PDF")
+    question = st.text_input("Ask a question")
     if question:
-        answer = find_best_match(question, chunks)
+        top_chunks = retrieve_top_chunks(question, chunk_embeddings, chunks)
+        answer = generate_answer(question, top_chunks)
         st.markdown(f"**Answer:** {answer}")
 

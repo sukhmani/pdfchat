@@ -1,18 +1,16 @@
-from sentence_transformers import SentenceTransformer
-import numpy as np
+from transformers import AutoTokenizer, AutoModel
+import torch
 
-model = SentenceTransformer("all-MiniLM-L6-v2")
+bert_tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+bert_model = AutoModel.from_pretrained("bert-base-uncased")
 
-def embed_text(text):
-    return model.encode(text)
+layoutlm_tokenizer = AutoTokenizer.from_pretrained("microsoft/layoutlm-base-uncased")
+layoutlm_model = AutoModel.from_pretrained("microsoft/layoutlm-base-uncased")
 
-from sklearn.metrics.pairwise import cosine_similarity
+def embed_text(text, model, tokenizer):
+    inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True)
+    with torch.no_grad():
+        outputs = model(**inputs)
+    return outputs.last_hidden_state.mean(dim=1).squeeze().numpy()
 
-def find_best_match(question, chunks):
-    chunk_embeddings = embed_text(chunks)
-    question_embedding = embed_text([question])
-
-    similarities = cosine_similarity(question_embedding, chunk_embeddings)[0]
-    best_idx = similarities.argmax()
-    return chunks[best_idx]
 

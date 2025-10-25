@@ -1,13 +1,15 @@
 import fitz  # PyMuPDF
+import pdfplumber
 
-def extract_with_pymupdf(pdf_path):
-    doc = fitz.open(pdf_path)
-    text = ""
-    for page in doc:
-        text += page.get_text()
-    return text
+def extract_text_pymupdf(path):
+    doc = fitz.open(path)
+    return "\n".join([page.get_text() for page in doc])
 
-def chunk_text(text, chunk_size=500):
-    words = text.split()
-    return [" ".join(words[i:i+chunk_size]) for i in range(0, len(words), chunk_size)]
+def extract_tables_pdfplumber(path):
+    tables = []
+    with pdfplumber.open(path) as pdf:
+        for page in pdf.pages:
+            tables.extend(page.extract_tables())
+    return tables
+
 
